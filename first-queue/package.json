@@ -1,0 +1,14 @@
+{
+  "name": "first-queue",
+  "version": "1.0.0",
+  "description": "",
+  "main": "rabbit_first.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "amqplib": "^0.4.2"
+  }
+}
