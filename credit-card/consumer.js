@@ -49,27 +49,25 @@ open.then((ch) => {
  *
 **/
 
-
 // function startServer (ch) {
   app.get('/credit_charge', (req, res) => {
     const ch = req.app.get('amqp')
     ch.assertQueue('', qu.options).then((q) => {
       ch.bindQueue(q.queue, 'credit_charge', 'action:charge')
       ch.consume(q.queue, (msg) => {
-        console.log('consume', msg)
         if (msg.properties.correlationId === 'verified') {
           res.send('charged! Thanks')
-          ch.close()
+          // ch.close()
         }
       }, { noAck: true })
-      // ch.sendToQueue('charge', new Buffer(JSON.stringify({ card: 'details'})), {
-      //   correlationId: 'verified',
-      //   replyTo: q.queue
-      // })
-      ch.publish('credit_charge', 'action:charge', new Buffer(JSON.stringify({ card: 'details'})), {
+      ch.sendToQueue('charge', new Buffer(JSON.stringify({ card: 'details'})), {
         correlationId: 'verified',
         replyTo: q.queue
       })
+      // ch.publish('credit_charge', 'action:charge', new Buffer(JSON.stringify({ card: 'details'})), {
+      //   correlationId: 'verified',
+      //   replyTo: q.queue
+      // })
     })
   })
   server.listen(8002)

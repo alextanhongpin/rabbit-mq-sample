@@ -25,8 +25,8 @@ open.then((ch) => {
 				**/
         setTimeout(() => {
           // ch.sendToQueue(msg.properties.replyTo, new Buffer('done'), { correlationId: 'verified' })
-          // ch.sendToQueue(msg.properties.replyTo, new Buffer('done'), { correlationId: 'verified' })
-					ch.publish(msg.properties.replyTo, 'action:charge', new Buffer('done'), { correlationId: 'verified' })
+          ch.sendToQueue(msg.properties.replyTo, new Buffer('done'), { correlationId: 'verified' })
+					// ch.publish(msg.properties.replyTo, 'action:charge', new Buffer('done'), { correlationId: 'verified' })
           console.log('done')
           ch.ack(msg)
 					// ch.close();
