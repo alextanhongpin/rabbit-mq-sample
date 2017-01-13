@@ -30,5 +30,8 @@ open.then((ch) => {
   ch.consume(queueName, (msg) => {
     console.log('[*] Received %s', msg.content.toString())
   }, consumeOptions)
+
+
+  // ch.sendToQueue(queueName, new Buffer('hello world'))
 })
 

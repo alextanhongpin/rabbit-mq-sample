@@ -52,7 +52,10 @@ open.then((ch) => {
 // function startServer (ch) {
   app.get('/credit_charge', (req, res) => {
     const ch = req.app.get('amqp')
-    ch.assertQueue('', qu.options).then((q) => {
+    ch.assertQueue('', { 
+      autoDelete: false,
+      exclusive: true
+    }).then((q) => {
       ch.bindQueue(q.queue, 'credit_charge', 'action:charge')
       ch.consume(q.queue, (msg) => {
         if (msg.properties.correlationId === 'verified') {
