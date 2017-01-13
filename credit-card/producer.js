@@ -1,41 +1,37 @@
-/*
- * 1. Exchange: What you publish to.
- * 2. Queue: What you consume from
- * 3. Binding: bind exchange to queue
- * 4. Publish: The exchange you want to target
- *
-**/
-
-const amqp = require('amqplib');
+const amqp = require('amqplib')
 
 const open = amqp.connect().then((c) => {
-	return c.createChannel();
-});
+  return c.createChannel()
+})
+
+const qu = {
+	// name: 'charge',
+  options: {
+    autoDelete: false
+  }
+}
 
 open.then((ch) => {
-
-	const qName = 'charge_credit';
-	ch.assertQueue(qName, { durable: false });
-	ch.prefetch(1);
-
-
-	ch.consume(qName, (msg) => {
-
-		if (msg) {
-			console.log(msg)
-			const n = msg.content.toString();
-			console.log(n)
-		}
-
-		
-		ch.ack(msg);
-	});
-
-	ch.sendToQueue(msg.properties.replyTo, 
-			new Buffer('charging credit card to ' + msg.properties.replyTo), 
-			{ 
-				correlationId: msg.properties.correlationId 
-			}
-		);
-});
-
+  console.log('worker:queue')
+  ch.assertExchange('credit_charge', 'direct', { autoDelete: false }).then((ex) => {
+    console.log('assertExchange', ex)
+    ch.assertQueue('charge', { autoDelete: false }).then((q) => {
+      console.log('assertQueue', q)
+      ch.bindQueue('charge', 'credit_charge')
+      ch.consume(q.queue, (msg) => {
+        console.log('msg', msg.properties)
+				/*
+				 * { consumerTag: String }
+				**/
+        setTimeout(() => {
+          ch.sendToQueue(msg.properties.replyTo, new Buffer('done'), { correlationId: 'verified' })
+					// ch.publish(msg.properties.replyTo, '', new Buffer('done'), { correlationId: 'verified' })
+          console.log('done')
+          ch.ack(msg)
+					// ch.close();
+					// process.exit(0);
+        }, 1500)
+      })
+    })
+  })
+})

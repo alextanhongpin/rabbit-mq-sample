@@ -1,27 +1,24 @@
-const amqp = require('amqplib/callback_api');
-
+const amqp = require('amqplib/callback_api')
 
 ampq.connect('amqp://localhost', function (err, conn) {
+  conn.createChannel(function (err, ch) {
+    const q = 'task_queue'
 
-	conn.createChannel(function (err, ch) {
+    ch.assertQueue(q, { durable: true })
+    ch.prefetch(1)
 
-		const q = 'task_queue';
+    console.log('[*] Waiting for messages in $s. To exit press ctrl + c', q)
 
-		ch.assertQueue(q, { durable: true });
-		ch.prefetch(1);
+    ch.consume(q, function (msg) {
+      const secs = msg.content.toString().split('.').length - 1
 
-		console.log('[*] Waiting for messages in $s. To exit press ctrl + c', q);
+      console.log('[x] Received %s', msg.content.toString())
 
-		ch.consume(q, function (msg) {
-			const secs = msg.content.toString().split('.').length - 1;
+      setTimeout(function () {
+        console.log('[x] done')
 
-			console.log('[x] Received %s', msg.content.toString());
-
-			setTimeout(function () {
-				console.log('[x] done');
-
-				ch.ack(msg)
-			}, secs * 1000);
-		}, { noAck: false });
-	});
-});
+        ch.ack(msg)
+      }, secs * 1000)
+    }, { noAck: false })
+  })
+})
