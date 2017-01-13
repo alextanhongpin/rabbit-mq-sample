@@ -29,12 +29,15 @@ const open = amqp.connect().then((c) => {
 })
 
 open.then((ch) => {
+  
+  // req.app.get('amqp')
   ch.assertExchange('credit_charge', 'direct', { autoDelete: false }).then((data) => {
     console.log('assertExchange', data)
     ch.assertQueue('charge', { autoDelete: false }).then((q) => {
       console.log('assertQueue', q)
-      ch.bindQueue('charge', 'credit_charge')
-      startServer(ch)
+      ch.bindQueue('charge', 'credit_charge', 'action:charge')
+      // startServer(ch)
+      app.set('amqp', ch)
     })
   })
 })
@@ -46,18 +49,24 @@ open.then((ch) => {
  *
 **/
 
-function startServer (ch) {
+
+// function startServer (ch) {
   app.get('/credit_charge', (req, res) => {
+    const ch = req.app.get('amqp')
     ch.assertQueue('', qu.options).then((q) => {
-      ch.bindQueue(q.queue, 'credit_charge')
+      ch.bindQueue(q.queue, 'credit_charge', 'action:charge')
       ch.consume(q.queue, (msg) => {
         console.log('consume', msg)
         if (msg.properties.correlationId === 'verified') {
-          ch.close()
           res.send('charged! Thanks')
+          ch.close()
         }
       }, { noAck: true })
-      ch.sendToQueue('charge', new Buffer(JSON.stringify({ card: 'details'})), {
+      // ch.sendToQueue('charge', new Buffer(JSON.stringify({ card: 'details'})), {
+      //   correlationId: 'verified',
+      //   replyTo: q.queue
+      // })
+      ch.publish('credit_charge', 'action:charge', new Buffer(JSON.stringify({ card: 'details'})), {
         correlationId: 'verified',
         replyTo: q.queue
       })
@@ -65,7 +74,7 @@ function startServer (ch) {
   })
   server.listen(8002)
   console.log('listening to port *:8002')
-}
+// }
 
 // Binding keys
 // *.orange.*

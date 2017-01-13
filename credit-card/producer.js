@@ -17,15 +17,16 @@ open.then((ch) => {
     console.log('assertExchange', ex)
     ch.assertQueue('charge', { autoDelete: false }).then((q) => {
       console.log('assertQueue', q)
-      ch.bindQueue('charge', 'credit_charge')
+      ch.bindQueue('charge', 'credit_charge', 'action:charge')
       ch.consume(q.queue, (msg) => {
         console.log('msg', msg.properties)
 				/*
 				 * { consumerTag: String }
 				**/
         setTimeout(() => {
-          ch.sendToQueue(msg.properties.replyTo, new Buffer('done'), { correlationId: 'verified' })
-					// ch.publish(msg.properties.replyTo, '', new Buffer('done'), { correlationId: 'verified' })
+          // ch.sendToQueue(msg.properties.replyTo, new Buffer('done'), { correlationId: 'verified' })
+          // ch.sendToQueue(msg.properties.replyTo, new Buffer('done'), { correlationId: 'verified' })
+					ch.publish(msg.properties.replyTo, 'action:charge', new Buffer('done'), { correlationId: 'verified' })
           console.log('done')
           ch.ack(msg)
 					// ch.close();
